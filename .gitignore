@@ -1,0 +1,24 @@
+# General
+.DS_Store
+*.log
+.env
+.env.local
+.env.*
+
+# Node/Next
+node_modules/
+.next/
+out/
+dist/
+build/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Editor
+.idea/
+.vscode/
