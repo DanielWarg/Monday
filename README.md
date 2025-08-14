@@ -1,31 +1,37 @@
-# Monday (monorepo)
+# Monday – Monorepo
 
-Fasning:
-- A) LiveKit-anslutning (mock-token)
-- B) STT → transcript till UI
-- C) LLM-svar utan verktyg
-- D) TTS tillbaka
-- E) Verktygsregister + router-fallback
-- F) Fler verktyg
+Detta repo innehåller två delar:
+- `monday-ui/`: HUD/klient (Next.js) – ingen affärslogik
+- `monday-agent/`: Python‑agent (FastAPI) – tokenserver + pipeline (modulär)
 
-Mappar:
-- monday-ui: Next.js HUD (LiveKit-klient, /api/token-proxy)
-- monday-agent: FastAPI tokenserver (mock), senare AgentRunner
+## Arkitektur
+UI ↔ LiveKit ↔ Agent.
+- UI hämtar token (mock i Fas A) från `/api/token` (UI) eller agenten.
+- Ljud/RTC via LiveKit (kommer i senare faser).
+- Affärslogik (STT/LLM/TTS/Tools) sker i agenten.
 
-Starta UI:
-```bash
-cd monday-ui
-npm install
-npm run dev -p 3200
-```
+## Faser
+- A) Skeleton (denna PR): mock‑token, tomma moduler
+- B) STT i agenten, transkript till UI via LiveKit‑metadata
+- C) LLM via Ollama (gpt‑oss:20b) med Harmony‑template
+- D) TTS (Piper) tillbaka till rummet
+- E) Tool‑register med Pydantic‑schema, confidence‑tröskel och router‑fallback, strikt validering
+- F) Telemetri (p50/p95, refusal‑rate, tool‑hit‑rate, schemafel) och UI‑indikatorer
 
-Starta agent (mock token):
-```bash
-cd monday-agent
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt httpx
-uvicorn main:app --reload --host 127.0.0.1 --port 7071
-```
+## Miljönycklar
+- UI: `NEXT_PUBLIC_LIVEKIT_URL`, `NEXT_PUBLIC_TOKEN_URL`
+- Agent: `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `OLLAMA_HOST`, `MODEL_NAME`, `STT_ENGINE`, `TTS_ENGINE`
 
-UI kan hämta token via NEXT_PUBLIC_TOKEN_URL eller via /api/token route.
+## Start i mock‑läge
+- UI: se `monday-ui/UI_README.md`
+- Agent: se `monday-agent/AGENT_README.md`
+
+## PR 1 – Acceptanskriterier (Fas A)
+- [x] Repo har `monday-ui/` och `monday-agent/` med beskrivna filer
+- [x] UI kan låtsas‑joina via `/api/token` och visar anslutningsstatus (simulerad)
+- [x] Agent kör FastAPI och svarar på `/token` (mock) och `/health`
+- [x] `.env.example` finns i `monday-ui/` (agentens `.env.example` måste ev. skapas manuellt lokalt p.g.a. verktygsbegränsning – se AGENT_README)
+- [x] `README.md`, `UI_README.md`, `AGENT_README.md` och `AUDIT.md` är ifyllda och konsekventa
+- [x] Inga beroenden till verkliga LLM/STT/TTS eller LiveKit ännu; allt mockat
+
+Se även `AUDIT.md` för beslut från `friday_jarvis`‑audit.

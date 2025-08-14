@@ -1,8 +1,7 @@
+node_modules/
+.next/
+out/
 .DS_Store
-node_modules
-.next
-out
-dist
-build
 .env
-.env.local
+.env.*
+*.log

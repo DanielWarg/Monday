@@ -1,17 +1,21 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
 
-app = FastAPI(title="Monday Agent Token Server")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"],)
+app = FastAPI(title="Monday Agent (Fas A)")
+
+class HealthResponse(BaseModel):
+    ok: bool
 
 class TokenResponse(BaseModel):
+    ok: bool
     token: str
-    url: str
+
+@app.get("/health", response_model=HealthResponse)
+async def health() -> HealthResponse:
+    return HealthResponse(ok=True)
 
 @app.get("/token", response_model=TokenResponse)
-def get_token():
-    # TODO: skapa JWT för LiveKit via API_KEY/SECRET. Tills vidare mock.
-    url = os.getenv("LIVEKIT_URL", "")
-    return TokenResponse(token="mock-token", url=url)
+async def token() -> TokenResponse:
+    mock = os.getenv("LIVEKIT_MOCK_TOKEN", "agent-mock-livekit-token")
+    return TokenResponse(ok=True, token=mock)
