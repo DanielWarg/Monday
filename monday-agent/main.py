@@ -5,8 +5,9 @@ import asyncio
 
 from .livekit_ingest import get_ingest
 from .telemetry import telemetry
+from .llm.harmony import ChatRequest, call_ollama
 
-app = FastAPI(title="Monday Agent (Fas B)")
+app = FastAPI(title="Monday Agent (Fas C)")
 
 class HealthResponse(BaseModel):
     ok: bool
@@ -19,8 +20,6 @@ class TokenResponse(BaseModel):
 
 @app.on_event("startup")
 async def startup_event():
-    # För enkelhet: koppla upp mot LiveKit automatiskt om env‑token finns via GET /token från UI:s serverless
-    # I produktion genererar man en riktig JWT. Här förutsätter vi att frontend hämtar token och att agent kan få en egen.
     pass
 
 @app.get("/health", response_model=HealthResponse)
@@ -33,7 +32,6 @@ async def token() -> TokenResponse:
     mock = os.getenv("LIVEKIT_MOCK_TOKEN", "agent-mock-livekit-token")
     return TokenResponse(ok=True, token=mock)
 
-# Hjälp‑endpoint för att manuellt starta ingest (med en klient‑token)
 class ConnectRequest(BaseModel):
     token: str
 
@@ -45,3 +43,15 @@ async def connect(req: ConnectRequest) -> ConnectResponse:
     ing = get_ingest()
     asyncio.create_task(ing.connect(req.token))
     return ConnectResponse(ok=True)
+
+class ChatIn(BaseModel):
+    prompt: str
+
+class ChatOut(BaseModel):
+    ok: bool
+    text: str
+
+@app.post("/chat", response_model=ChatOut)
+async def chat(body: ChatIn) -> ChatOut:
+    res = await call_ollama(ChatRequest(prompt=body.prompt))
+    return ChatOut(ok=True, text=res.text)
