@@ -6,6 +6,7 @@
 // - Partikelbakgrund och röst/video kan stängas av centralt
 
 import React, { useEffect, useMemo, useRef, useState, useContext, createContext, useId } from "react";
+import { useLiveKit } from "./livekitStore";
 
 const SAFE_BOOT = true; // <-- slå PÅ för att garantera uppstart i sandbox. Kan sättas till false när allt funkar.
 const UI_ONLY = true; // UI‑endast: ingen backend/WS/Spotify – bara grafik
@@ -529,6 +530,7 @@ function HUDInner() {
   useEffect(() => { if (UI_ONLY || SAFE_BOOT) return; const id = setInterval(() => { if (typeof window !== 'undefined' && Math.random() < 0.07) dispatch({ type: "OPEN_VIDEO", source: { kind: "webcam" } }); }, 4000); return () => clearInterval(id); }, [dispatch]);
   const timeInit = useMemo(() => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), []); const [now, setNow] = useState(timeInit); useEffect(() => { const id = setInterval(() => setNow(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })), 1000); return () => clearInterval(id); }, []);
   const spotify = useSpotify();
+  const lk = useLiveKit();
   useEffect(()=>{ /* no-op */ },[]);
   const fmtTime = (ms)=>{ if(!ms) return '0:00'; const s=Math.floor(ms/1000); const m=Math.floor(s/60); const ss=String(s%60).padStart(2,'0'); return `${m}:${ss}`; };
 
@@ -777,6 +779,32 @@ function HUDInner() {
                   }
                 }catch(err){ setJournal((J)=>[{ id:safeUUID(), ts:new Date().toISOString(), text:`AI Act exception`}, ...J].slice(0,100)); }
               }} className="rounded-xl border border-cyan-400/30 px-3 py-1 text-xs hover:bg-cyan-400/10">AI‑Act</button>
+            </div>
+          </Pane>
+
+          <Pane title="Transkript">
+            <div className="text-sm text-cyan-200">
+              <div className="mb-2 flex items-center gap-2">
+                <span className={`text-[10px] uppercase tracking-widest ${lk.listening ? 'text-cyan-300' : 'text-cyan-300/60'}`}>{lk.listening ? 'Lyssnar…' : 'Tyst'}</span>
+                <button
+                  onClick={()=> lk.setShowPartials && lk.setShowPartials(!lk.showPartials)}
+                  className="ml-auto rounded-xl border border-cyan-400/30 px-2 py-1 text-[10px] hover:bg-cyan-400/10"
+                >{lk.showPartials ? 'Dölj partials' : 'Visa partials'}</button>
+                <button
+                  onClick={()=> { /* rensa finals */ if (Array.isArray(lk.finals)) { const a = []; lk.finals.splice(0, lk.finals.length, ...a); } }}
+                  className="rounded-xl border border-cyan-400/30 px-2 py-1 text-[10px] hover:bg-cyan-400/10"
+                >Rensa</button>
+              </div>
+              {lk.partials && lk.showPartials && (
+                <div className="mb-2 rounded border border-cyan-400/20 bg-cyan-900/20 p-2 text-cyan-300/80">{lk.partials}</div>
+              )}
+              <ul className="space-y-2 max-h-48 overflow-auto">
+                {Array.isArray(lk.finals) && lk.finals.map(it => (
+                  <li key={it.id} className="rounded border border-cyan-400/10 p-2 text-cyan-100 text-sm">
+                    {it.text}
+                  </li>
+                ))}
+              </ul>
             </div>
           </Pane>
 
