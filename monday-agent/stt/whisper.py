@@ -6,8 +6,8 @@ import time
 import numpy as np
 import soundfile as sf
 from faster_whisper import WhisperModel
-from .interfaces import STTResult
-from ..telemetry import telemetry
+from stt.interfaces import STTResult
+from telemetry import telemetry
 
 @dataclass
 class WhisperConfig:
@@ -51,8 +51,6 @@ class WhisperSTT:
             if (self._last_partial_at is None) or ((now - self._last_partial_at) * 1000.0 >= self.cfg.max_latency_ms):
                 audio = np.concatenate(self._buffer[-10:]) if len(self._buffer) > 0 else np.array([], dtype=np.float32)
                 if audio.size > 0:
-                    # Skriv temporärt WAV i minne (faster‑whisper accepterar numpy direkt via transcribe ifrån file=?)
-                    # Vi använder transcribe på PCM via numpy array
                     segments, _ = self.model.transcribe(audio, language="sv", vad_filter=False, beam_size=1, temperature=0.0)
                     text = "".join([seg.text for seg in segments]) if segments else ""
                     if text.strip():
@@ -62,7 +60,6 @@ class WhisperSTT:
                         on_partial(STTResult(text=text.strip(), confidence=0.5))
         # EOU: om energi sjunker under tröskel och vi nyligen talat – final
         if self._speech_started_at is not None and vad_level <= self.cfg.vad_threshold * 0.5:
-            # samla hela bufferten till slutlig transkription
             audio = np.concatenate(self._buffer) if len(self._buffer) > 0 else np.array([], dtype=np.float32)
             self.reset()
             if audio.size == 0:
