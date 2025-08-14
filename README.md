@@ -12,21 +12,15 @@ UI ↔ LiveKit ↔ Agent.
 
 ## Faser
 - A) Skeleton (klar)
-- B) STT i agenten, transkript till UI via LiveKit‑metadata (klar)
-- C) LLM via Ollama (gpt‑oss:20b) med Harmony‑template (denna PR)
+- B) STT i agenten, transkript till UI via LiveKit‑metadata (denna PR)
+- C) LLM via Ollama (gpt‑oss:20b) med Harmony‑template
 - D) TTS (Piper) tillbaka till rummet
 - E) Tool‑register med Pydantic‑schema, confidence‑tröskel och router‑fallback, strikt validering
 - F) Telemetri (p50/p95, refusal‑rate, tool‑hit‑rate, schemafel) och UI‑indikatorer
 
 ## Miljönycklar
 - UI: `NEXT_PUBLIC_LIVEKIT_URL`, `NEXT_PUBLIC_TOKEN_URL`
-- Agent: `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `STT_ENGINE=whisper`, `WHISPER_MODEL`, `WHISPER_DEVICE`, `VAD_THRESHOLD`, `MAX_LATENCY_MS`, `OLLAMA_HOST`, `MODEL_NAME`
-
-## PR 3 – Acceptanskriterier (Fas C)
-- [ ] `POST /chat` svarar med text från Ollama (gpt‑oss:20B)
-- [ ] Ingen verktygsanvändning eller TTS i denna fas
-- [ ] Harmony‑template används för prompten
-- [ ] Dokumentation uppdaterad (`AGENT_README.md` och rot‑README)
+- Agent: `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `STT_ENGINE=whisper`, `WHISPER_MODEL`, `WHISPER_DEVICE`, `VAD_THRESHOLD`, `MAX_LATENCY_MS`
 
 ## Start i mock‑läge
 - UI: se `monday-ui/UI_README.md`
