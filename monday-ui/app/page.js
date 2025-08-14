@@ -131,6 +131,32 @@ function useVoiceInput() {
   const start = () => { if (SAFE_BOOT) { alert("Röstinput avstängd i Safe Boot"); return; } try { recRef.current && recRef.current.start(); setIsListening(true); } catch (_) {} }; const stop = () => { if (!SAFE_BOOT) recRef.current && recRef.current.stop(); };
   return { transcript, isListening, start, stop };
 }
+function useLiveKitClientMock() {
+  const [status, setStatus] = useState("idle");
+  const [token, setToken] = useState(null);
+  const url = (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_TOKEN_URL) || "/api/token";
+  useEffect(() => {
+    let cancelled = false;
+    async function connect() {
+      setStatus("connecting");
+      try {
+        const r = await fetch(url);
+        const j = await r.json().catch(() => null);
+        if (!cancelled && j && j.ok && j.token) {
+          setToken(j.token);
+          setStatus("connected");
+        } else if (!cancelled) {
+          setStatus("error");
+        }
+      } catch (_) {
+        if (!cancelled) setStatus("error");
+      }
+    }
+    connect();
+    return () => { cancelled = true; };
+  }, [url]);
+  return { status, token };
+}
 
 // Spotify Web Playback SDK + Web API kontroll
 function useSpotify() {
@@ -380,19 +406,6 @@ function JarvisCore() {
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
-// Wallet View (stub utan MetaMask)
-function WalletView() {
-  return (
-    <div>
-      <div className="mb-3 flex items-center gap-2 text-cyan-200"><IconDollar className="h-4 w-4" /><h3 className="text-sm uppercase tracking-widest">Plånbok</h3></div>
-      <div className="rounded-xl border border-cyan-400/20 p-4 bg-cyan-900/20 text-sm text-cyan-300/80">
-        Plånboksintegration är avaktiverad. Vi lägger till anslutning senare.
-      </div>
-    </div>
-  );
-}
-
-// ────────────────────────────────────────────────────────────────────────────────
 // Diagnostics
 function Diagnostics() { const [results, setResults] = useState([]); const { dispatch } = useHUD(); const run = () => { const out = []; try { out.push(clampPercent(-5) === 0 ? "PASS clamp <0" : "FAIL clamp <0"); out.push(clampPercent(150) === 100 ? "PASS clamp >100" : "FAIL clamp >100"); const a = safeUUID(); const b = safeUUID(); out.push(a !== b ? "PASS uuid unique" : "FAIL uuid unique"); if (typeof window !== 'undefined' && window.HUD) { window.HUD.showModule('calendar'); out.push('PASS HUD.showModule'); window.HUD.hideOverlay(); out.push('PASS HUD.hideOverlay'); } if (SAFE_BOOT) { out.push('SAFE_BOOT on'); } } catch (e) { out.push("Diagnostics error: " + (e && e.message ? e.message : String(e))); } setResults(out); }; return (<Pane title="Diagnostics"><button onClick={run} className="rounded-xl border border-cyan-400/30 px-3 py-1 text-xs hover:bg-cyan-400/10">Run tests</button><ul className="mt-3 space-y-1 text-xs text-cyan-300/80">{results.map((r, i) => (<li key={i}>{r}</li>))}</ul></Pane>); }
 
@@ -434,6 +447,7 @@ function HUDInner() {
     if (t === 'OPEN_VIDEO') return 'öppnar video';
     return t || '';
   };
+  const livekit = useLiveKitClientMock();
   // Auto geolocation for weather (inaktiverad i UI_ONLY)
   useEffect(() => {
     if (UI_ONLY) return;
@@ -528,7 +542,14 @@ function HUDInner() {
       <div className="mx-auto max-w-7xl px-6 pt-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 opacity-80"><IconWifi className="h-4 w-4" /><IconBattery className="h-4 w-4" /><IconBell className="h-4 w-4" /></div>
-          <div className="flex items-center gap-2 text-cyan-300/80"><IconClock className="h-4 w-4" /><span className="tracking-widest text-xs uppercase" suppressHydrationWarning>{now}</span></div>
+          <div className="flex items-center gap-3 text-cyan-300/80">
+            <IconClock className="h-4 w-4" /><span className="tracking-widest text-xs uppercase" suppressHydrationWarning>{now}</span>
+            <span className={`text-[10px] uppercase tracking-widest ${livekit.status==='connected' ? 'text-green-300' : livekit.status==='connecting' ? 'text-yellow-300' : 'text-rose-300'}`}>
+              {livekit.status==='connected' ? 'Ansluten' : livekit.status==='connecting' ? 'Ansluter' : 'Ej ansluten'}
+            </span>
+            <span className={`text-[10px] uppercase tracking-widest ${isListening ? 'text-cyan-300' : 'text-cyan-300/60'}`}>{isListening ? 'Lyssnar' : 'Lyssnar ej'}</span>
+            <span className="text-[10px] uppercase tracking-widest text-cyan-300/60">Talar ej</span>
+          </div>
         </div>
         {globalError && (<div className="mt-3 rounded-xl border border-cyan-500/20 bg-cyan-900/20 p-3 text-xs text-cyan-300/90"><strong>Observerat globalt fel:</strong> {globalError}</div>)}
       </div>
