@@ -1,12 +1,14 @@
-# Monday UI – HUD (Fas A)
+# Monday UI – HUD (Fas B)
 
-Denna del är en ren HUD/klient utan affärslogik. LiveKit är stubbat och token hämtas från en mock‑endpoint i samma UI.
+HUD lyssnar på LiveKit‑metadata och visar transkript i realtid:
+- `transcript_partial`: visas i grått som live‑text
+- `transcript_final`: committas till historiken
 
 ## Kör lokalt (dev)
 
-1. Kopiera `.env.example` till `.env` och fyll i vid behov:
-   - `NEXT_PUBLIC_LIVEKIT_URL` (kan lämnas tomt i Fas A)
-   - `NEXT_PUBLIC_TOKEN_URL` (t.ex. `/api/token`)
+1. `.env` (kan återanvändas från Fas A):
+   - `NEXT_PUBLIC_LIVEKIT_URL` (ws(s)://…)
+   - `NEXT_PUBLIC_TOKEN_URL` (default `/api/token`)
 2. Installera och starta:
 
 ```
@@ -17,9 +19,9 @@ npm run dev -- --hostname 127.0.0.1 -p 3200
 
 Öppna `http://127.0.0.1:3200`.
 
-## Mock-token
-- `pages/api/token.ts` returnerar `{ ok: true, token: "mock-livekit-token" }`.
-- UI anropar `NEXT_PUBLIC_TOKEN_URL` (default `/api/token`) och visar anslutningsstatus (simulerad).
+## Transkriptpanelen
+- Meny: "Visa partials" på/av, "Rensa" historik
+- Indikator: "Lyssnar…" när inkommande audio upptäcks
 
 ## Notering
-- Byggläge i detta repo använder statisk export. API‑routes fungerar i dev, men ingår inte i statisk export. För Fas A räcker dev.
+- Ingen LLM/TTS/verktyg i Fas B. Endast STT.
