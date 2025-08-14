@@ -3,11 +3,13 @@ from pydantic import BaseModel
 import os
 import asyncio
 
-from .livekit_ingest import get_ingest
-from .telemetry import telemetry
-from .llm.harmony import ChatRequest, call_ollama
+from livekit_ingest import get_ingest
+from telemetry import telemetry
+from llm.harmony import ChatRequest, call_ollama
+from tts.piper import PiperTTS
+from livekit_audio import get_publisher
 
-app = FastAPI(title="Monday Agent (Fas C)")
+app = FastAPI(title="Monday Agent (Fas D)")
 
 class HealthResponse(BaseModel):
     ok: bool
@@ -55,3 +57,17 @@ class ChatOut(BaseModel):
 async def chat(body: ChatIn) -> ChatOut:
     res = await call_ollama(ChatRequest(prompt=body.prompt))
     return ChatOut(ok=True, text=res.text)
+
+class SpeakIn(BaseModel):
+    text: str
+
+class SpeakOut(BaseModel):
+    ok: bool
+
+@app.post("/speak", response_model=SpeakOut)
+async def speak(body: SpeakIn) -> SpeakOut:
+    # TTS stub: generera PCM och publicera
+    pcm = PiperTTS().synthesize(body.text)
+    pub = get_publisher()
+    pub.publish_pcm16(pcm)
+    return SpeakOut(ok=True)

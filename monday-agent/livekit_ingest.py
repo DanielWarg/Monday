@@ -7,9 +7,9 @@ from typing import Optional
 import numpy as np
 from livekit import rtc
 
-from .stt.whisper import WhisperSTT, WhisperConfig
-from .stt.interfaces import STTResult
-from .telemetry import telemetry
+from stt.whisper import WhisperSTT, WhisperConfig
+from stt.interfaces import STTResult
+from telemetry import telemetry
 
 LIVEKIT_URL = os.getenv("LIVEKIT_URL", "")
 LIVEKIT_API_KEY = os.getenv("LIVEKIT_API_KEY", "")

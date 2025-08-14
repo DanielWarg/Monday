@@ -1,27 +1,10 @@
-# Monday UI – HUD (Fas B)
+# Monday UI – HUD (Fas D)
 
-HUD lyssnar på LiveKit‑metadata och visar transkript i realtid:
-- `transcript_partial`: visas i grått som live‑text
-- `transcript_final`: committas till historiken
+HUD lyssnar på LiveKit‑metadata för transkript och spelar upp inkommande ljud från en lokal track som agenten publicerar (TTS).
 
-## Kör lokalt (dev)
+## Testa TTS
+- Anslut agenten till rummet (`POST /connect` med klient‑token)
+- Kör: `POST /speak` med `{ "text": "Hej från agenten" }`
+- UI ska spela upp ljud (stub i Fas D om Piper saknas)
 
-1. `.env` (kan återanvändas från Fas A):
-   - `NEXT_PUBLIC_LIVEKIT_URL` (ws(s)://…)
-   - `NEXT_PUBLIC_TOKEN_URL` (default `/api/token`)
-2. Installera och starta:
-
-```
-cd monday-ui
-npm install
-npm run dev -- --hostname 127.0.0.1 -p 3200
-```
-
-Öppna `http://127.0.0.1:3200`.
-
-## Transkriptpanelen
-- Meny: "Visa partials" på/av, "Rensa" historik
-- Indikator: "Lyssnar…" när inkommande audio upptäcks
-
-## Notering
-- Ingen LLM/TTS/verktyg i Fas B. Endast STT.
+Övrigt se Fas B för transkript och anslutning.
